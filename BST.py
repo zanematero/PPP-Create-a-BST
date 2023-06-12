@@ -1,94 +1,185 @@
-# Part 1: Create a BSTNode class
+#Part 1: Create a BSTNode class
 class BSTNode:
-    def __init__(self, data=None, left=None, right=None):
-        self.data = data
-        self.left = left
-        self.right = right
-    
-    def __str__(self):
-        return str(self.data)
+  def __init__(self, data = None, left = None, right = None):
+    self.data = data
+    self.left = left
+    self.right = right
+  def __str__(self):
+    return str(self.data)
+  def __repr__(self):
+    return str(self.data)
 
-    def __repr__(self):
-        return str(self.data)
-
-# Part 2: Create a BST class
+#Part 2: Create a BST class
 class BST:
-    def __init__(self, root=None):
-        self.root = root
-        self.contents = set()
+  def __init__(self, root=None):
+    self.root = root
+    self.contents = []
+  
+  def __str__(self):
+    if self.root == None:
+      return "The tree is empty"
+    else:
+      self.output = ''
+      self.print_tree(node=self.root)
+      return self.output
+  
+  def __repr__(self):
+    if self.root == None:
+      return "The tree is empty"
+    else:
+      self.output = ''
+      self.print_tree(node=self.root)
+      return self.output
+  
+  def print_tree(self, node, level=0):
+    if node != None:
+      self.print_tree(node.right, level + 1)
+      self.output += ' ' * 4 * level + '-> ' + str(node.data) + '\n'
+      self.print_tree(node.left, level + 1)
 
-    def __str__(self):
-        if self.root == None:
-            return "This Binary-Tree is empty."
-        
-        self.output = ""
-        self.print_tree(node=self.root)
-        return self.output
+  #Part 3: Add functionality to your BST class
+  def add(self,node):
+    #data wrong type
+    if type(node) != int and type(node) != BSTNode:
+      raise ValueError("You must pass an int or a BSTNode")
 
-    def print_tree(self, node, level=0):
-        if node != None:
-            self.print_tree(node.right, level + 1)
-            self.output += " " * 4 + level + " => " + str(node.data) + " " * 4
-        self.print_tree(node.left, level + 1)
+    #data int, make new BSTNode
+    if type(node) == int:
+      node = BSTNode(node)
 
-    def add(self, data):
-        if type(data) not in [int, BSTNode]:
-            raise ValueError("Incorrect data type.")
+    #node already in tree
+    if node.data in self.contents:
+      return
 
-        node = None
-        if type(data) == int:
-            node = BSTNode(data=10)
+    #tree empty
+    if self.root == None:
+      self.root = node
+      self.contents.append(node.data)
+      return
+
+    #call new (recursive) function; don't need to check other conditions again
+    self.add_node(self.root, node)
+
+  def add_node(self, cur_node, new_node):
+    # New node bigger - go right
+    if new_node.data > cur_node.data:
+      if cur_node.right == None:
+        cur_node.right = new_node
+        self.contents.append(new_node.data)
+        return
+      else:
+        #recurse/traverse
+        self.add_node(cur_node.right, new_node)
+    else: #new node smaller, go left
+      if cur_node.left == None:
+        cur_node.left = new_node
+        self.contents.append(new_node.data)
+        return
+      else:
+        #recurse/traverse
+        self.add_node(cur_node.left, new_node)
+  
+  # bonus content
+  def remove(self, node):
+    #data wrong type
+    if type(node) != int and type(node) != BSTNode:
+      raise ValueError("You must pass an int or a BSTNode")
+
+    #data BSTNode, make int
+    if type(node) == BSTNode:
+      node = node.data
+
+    #node already in tree
+    if node not in self.contents:
+      raise ValueError("Value not in tree")
+
+    #call new (recursive) function; don't need to check other conditions again
+    self.remove_node(self.root, node)
+
+  def remove_node(self, cur_node, rem_node, prev_node = None):
+    # found node, now remove
+    if rem_node == cur_node.data:
+      #rem_node has no children
+      if cur_node.right == None and cur_node.left == None:
+        if cur_node == prev_node.right:
+          prev_node.right = None
+          self.contents.remove(rem_node)
         else:
-            node = data
-
-        if node.data in self.contents:
-            return
-        if self.root == None:
-            self.root = node
-
-    def add_node(self, current, new):
-        if new.data < current.data:
-            if current.right == None:
-                current.right = new
-                self.contents.add(new.data)
-                return
-            self.add_node(current.right, new)
+          prev_node.left = None
+          self.contents.remove(rem_node)
+      #rem_node has one child
+      elif cur_node.right == None and cur_node.left != None:
+        if cur_node == prev_node.right:
+          prev_node.right = cur_node.left
+          self.contents.remove(rem_node)
         else:
-            if current.left == None:
-                current.left = new
-                self.contents.add(new.data)
-            self.add_node(current.left, new)
-            
-    # def __repr__(self):
-# Part 3: Add functionality to your BST class
+          prev_node.left = cur_node.left
+          self.contents.remove(rem_node)
+      elif cur_node.left == None and cur_node.right != None:
+        if cur_node == prev_node.left:
+          prev_node.left = cur_node.right
+          self.contents.remove(rem_node)
+        else:
+          prev_node.right = cur_node.right
+          self.contents.remove(rem_node)
+      #rem_node has two children
+      else:
+        self.nodes = []
+        self.traverse_tree(cur_node) #get list of all descendants
+        self.nodes.remove(rem_node) #remove node we're removing from list
+        self.contents.remove(rem_node)
+        # remove node and all descendants
+        if cur_node == prev_node.right:
+          prev_node.right = None
+        else:
+          prev_node.left = None
+        # add all descendants back into tree
+        for node in self.nodes:
+          self.add(node)
+    #wrong node, traverse
+    elif rem_node > cur_node.data:
+      self.remove_node(cur_node.right, rem_node, prev_node = cur_node)
+    elif rem_node < cur_node.data:
+      self.remove_node(cur_node.left, rem_node, prev_node = cur_node)
+      
+  def traverse_tree(self, node):
+    if node != None:
+      self.traverse_tree(node.right)
+      self.nodes.append(node.data)
+      self.traverse_tree(node.left)
 
 
+#test code
+node1 = BSTNode(3)
+print(node1) #3
 
+node2 = BSTNode(4, left=node1)
+print(node2) #4
 
+node3 = BSTNode()
+print(node3) #None
+node3.data = 5
+print(node3) #5
 
-# n1 = BSTNode(3)
-# print(n1)
+bst = BST()
+print(bst) #The tree is empty
 
-# n2 = BSTNode(4, left=n1)
-# print(n2)
+print('=======================\n')
 
-# n3 = BSTNode()
-# print(n3) #None
-# n3.data = 5
-# print(n3) #5
+bst.root = node2
+print(bst)
+#output:
+# -> 4
+#     -> 3
 
-#bst = BST()
-# print(bst)
+print('=======================\n')
 
-# bst.root = n2
-# print(bst)
-
-# n2.right = n3
-# print(bst)
-
-#bst.add(10)
-#bst.add("10")
-
+node2.right = node3
+print(bst)
+#output:
+#     -> 5
+# -> 4
+#     -> 3
 
 #create tree from image
 node8 = BSTNode(8)
@@ -112,4 +203,4 @@ bst.add(node4)
 bst.add(node7)
 bst.add(node13)
 
-bst.print_tree(node1)
+print(bst)
